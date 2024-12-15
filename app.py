@@ -1,7 +1,6 @@
-
+import streamlit as st
 from dotenv import load_dotenv
 import base64
-import streamlit as st
 import os
 import io
 import fitz  # PyMuPDF
@@ -9,12 +8,16 @@ from PIL import Image
 import pdf2image
 import google.generativeai as genai
 import matplotlib.pyplot as plt
+import re
+
+# Set Streamlit page config
+st.set_page_config(page_title="ATS Resume System", page_icon=":bar_chart:", layout="wide")
 
 # Load environment variables
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Extract text from PDF
+@st.cache_data
 def extract_text_from_pdf(uploaded_file):
     try:
         document = fitz.open(stream=uploaded_file.read(), filetype='pdf')
@@ -27,8 +30,7 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"Error extracting text from PDF: {e}")
         return ""
 
-
-# Get response from Generative AI model
+@st.cache_data
 def get_gemini_response(input_text, resume_text, prompt):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
@@ -38,7 +40,6 @@ def get_gemini_response(input_text, resume_text, prompt):
     except Exception as e:
         st.error(f"Error generating response from AI model: {e}")
         return ""
-
 
 # Convert PDF to image for visualization (if needed)
 def input_pdf_setup(uploaded_file):
@@ -59,7 +60,6 @@ def input_pdf_setup(uploaded_file):
         st.error(f"Error converting PDF to image: {e}")
         return []
 
-
 # Visualize results
 def visualize_results(results):
     categories = ['Skills Match', 'Experience Match', 'Education Match', 'Keywords Match', 'Projects and Achievements Match']
@@ -72,8 +72,8 @@ def visualize_results(results):
     ax.set_title('Resume Match Analysis')
     
     st.pyplot(fig)
+
 def extract_percentage(response):
-    import re
     match = re.search(r'(\d+)%', response)
     if match:
         return match.group(1)
@@ -83,10 +83,6 @@ def process_resume(uploaded_file, input_text, input_prompt):
     resume_text = extract_text_from_pdf(uploaded_file)
     response = get_gemini_response(input_text, resume_text, input_prompt)
     return response
-
-
-# Streamlit app configuration
-st.set_page_config(page_title="ATS Resume System", page_icon=":bar_chart:", layout="wide")
 
 # Title with logo on the side
 col1, col2 = st.columns([8, 1])
