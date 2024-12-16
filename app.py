@@ -30,13 +30,19 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"Error extracting text from PDF: {e}")
         return ""
 
-@st.cache_data
 def get_gemini_response(input_text, resume_text, prompt):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
         combined_input = f"Input Text: {input_text}\n\nResume Content: {resume_text}\n\nPrompt: {prompt}"
         response = model.generate_content(combined_input)
-        return response.text
+        response_text = response.text
+
+        # Modify the response to exclude the unwanted portion
+        unwanted_portion = "The Response is"
+        if unwanted_portion in response_text:
+            response_text = response_text.split(unwanted_portion)[-1].strip()
+        
+        return response_text
     except Exception as e:
         st.error(f"Error generating response from AI model: {e}")
         return ""
@@ -114,6 +120,7 @@ if uploaded_file is not None:
     with col3:
         Submit_6 = st.button("Personalized Learning Path", key="button6")
     
+
     input_prompt_1 = """
         You are an experienced HR profes
         sional with technical expertise in Data Science, Full Stack Development, Web Development, or Machine Learning.
