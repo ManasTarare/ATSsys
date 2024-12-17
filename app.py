@@ -9,8 +9,10 @@ import pdf2image
 import google.generativeai as genai
 import matplotlib.pyplot as plt
 import re
+import requests
+from bs4 import BeautifulSoup
 
-# Set Streamlit page config
+# Set Streamlit page config (must be first Streamlit command)
 st.set_page_config(page_title="ATS Resume System", page_icon=":bar_chart:", layout="wide")
 
 # Load environment variables
@@ -30,10 +32,10 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"Error extracting text from PDF: {e}")
         return ""
 
-def get_gemini_response(input_text, resume_text, prompt):
+def get_gemini_response(input_text, resume_text, linkedin_content, prompt):
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
-        combined_input = f"Input Text: {input_text}\n\nResume Content: {resume_text}\n\nPrompt: {prompt}"
+        combined_input = f"Input Text: {input_text}\n\nResume Content: {resume_text}\n\nLinkedIn Content: {linkedin_content}\n\nPrompt: {prompt}"
         response = model.generate_content(combined_input)
         response_text = response.text
 
@@ -47,7 +49,6 @@ def get_gemini_response(input_text, resume_text, prompt):
         st.error(f"Error generating response from AI model: {e}")
         return ""
 
-# Convert PDF to image for visualization (if needed)
 def input_pdf_setup(uploaded_file):
     try:
         image = pdf2image.convert_from_bytes(uploaded_file.read())
@@ -66,7 +67,6 @@ def input_pdf_setup(uploaded_file):
         st.error(f"Error converting PDF to image: {e}")
         return []
 
-# Visualize results
 def visualize_results(results):
     categories = ['Skills Match', 'Experience Match', 'Education Match', 'Keywords Match', 'Projects and Achievements Match']
     scores = [results['skills'], results['experience'], results['education'], results['keywords'], results['projects']]
@@ -85,9 +85,22 @@ def extract_percentage(response):
         return match.group(1)
     return "N/A"
 
-def process_resume(uploaded_file, input_text, input_prompt):
+def scrape_linkedin_profile(linkedin_url):
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+        response = requests.get(linkedin_url, headers=headers)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        linkedin_content = soup.get_text(separator="\n")
+        return linkedin_content
+    except Exception as e:
+        st.error(f"Error scraping LinkedIn profile: {e}")
+        return ""
+
+def process_resume(uploaded_file, input_text, input_prompt, linkedin_url):
     resume_text = extract_text_from_pdf(uploaded_file)
-    response = get_gemini_response(input_text, resume_text, input_prompt)
+    linkedin_content = scrape_linkedin_profile(linkedin_url)
+    response = get_gemini_response(input_text, resume_text, linkedin_content, input_prompt)
     return response
 
 # Title with logo on the side
@@ -99,6 +112,10 @@ with col2:
 
 # User input for job description
 input_text = st.text_area("Job Description:", key="input")
+
+# User input for LinkedIn profile URL
+linkedin_url = st.text_input("LinkedIn Profile URL:", key="linkedin")
+
 # File uploader for resume
 uploaded_file = st.file_uploader("Upload your Resume", type=["pdf"])
 
@@ -119,7 +136,6 @@ if uploaded_file is not None:
         Submit_5 = st.button("Cultural Fit Assessment", key="button5")
     with col3:
         Submit_6 = st.button("Personalized Learning Path", key="button6")
-    
 
     input_prompt_1 = """
         You are an experienced HR profes
@@ -202,39 +218,34 @@ if uploaded_file is not None:
         
         Ensure the recommendations are relevant and practical, offering specific examples and resources.
     """
-    
-    
     if Submit_1:
-        response = process_resume(uploaded_file, input_text, input_prompt_1)
+        response = process_resume(uploaded_file, input_text, input_prompt_1, linkedin_url)
         st.subheader("The Response is")
         st.write(response)
     
     if Submit_2:
-        response = process_resume(uploaded_file, input_text, input_prompt_2)
+        response = process_resume(uploaded_file, input_text, input_prompt_2, linkedin_url)
         st.subheader("The Response is")
         st.write(response)
         # Visualize results if available in the response
         # visualize_results(results)
     
     if Submit_3:
-        response = process_resume(uploaded_file, input_text, input_prompt_3)
+        response = process_resume(uploaded_file, input_text, input_prompt_3, linkedin_url)
         st.subheader("The Response is")
         st.write(response)
 
     if Submit_4:
-        response = process_resume(uploaded_file, input_text, input_prompt_4)
+        response = process_resume(uploaded_file, input_text, input_prompt_4, linkedin_url)
         st.subheader("The Response is")
         st.write(response)
     
     if Submit_5:
-        response = process_resume(uploaded_file, input_text, input_prompt_5)
+        response = process_resume(uploaded_file, input_text, input_prompt_5, linkedin_url)
         st.subheader("The Response is")
         st.write(response)
     
     if Submit_6:
-        response = process_resume(uploaded_file, input_text, input_prompt_6)
+        response = process_resume(uploaded_file, input_text, input_prompt_6, linkedin_url)
         st.subheader("Personalized Learning Path")
         st.write(response)
-
-    
-   
