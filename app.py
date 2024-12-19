@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import re
 
 # Set Streamlit page config (must be first Streamlit command)
-st.set_page_config(page_title="ATS Resume System", page_icon=":bar_chart:", layout="wide")
+st.set_page_config(page_title="TalentScout", page_icon=":bar_chart:", layout="wide")
 
 # Load environment variables
 load_dotenv()
@@ -93,7 +93,7 @@ col1, col2 = st.columns([8, 1])
 with col1:
     st.title("ATS Resume System")
 with col2:
-    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQn34fT7shq_xoPwkbNaLAt7JQXg6ULi49RNg&s", width=150)
+    st.image("https://www.google.com/url?sa=i&url=https%3A%2F%2F99designs.com%2Finspiration%2Flogos%2Ftalent&psig=AOvVaw02k-qe6Bwdg2RHzgr4vC32&ust=1734678945120000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKCgk-yks4oDFQAAAAAdAAAAABAE", width=150)
 
 # User input for job description
 input_text = st.text_area("Job Description:", key="input")
